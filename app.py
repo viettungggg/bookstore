@@ -93,9 +93,7 @@ def add_book():
         cur.close()
         conn.close()
 
-    t = threading.Thread(target=fetch_sumary, args=(data["ISBN"], data["title"], data["Author"]))
-    t.daemon = True
-    t.start()
+    fetch_sumary(data["ISBN"], data["title"], data["Author"])
 
     resp = make_response(jsonify({
         "ISBN": data["ISBN"],
@@ -173,6 +171,7 @@ def get_book(isbn):
 
     if not book:
         return jsonify({"message":"Book not found"}), 404
+    book["price"] = float(book["price"])
     return jsonify(book),200
 
 
