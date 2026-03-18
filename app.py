@@ -33,7 +33,8 @@ def valid_price(val):
         if len(s.split(".")[1])> 2:
             return False
     try:
-        float(s)
+        if float(s) < 0:
+            return False
         return True
     except:
         return False
@@ -76,9 +77,10 @@ def add_book():
     conn = get_conn()
     cur = conn.cursor()
     try:
+        data["summary"] = ""
         cur.execute(
-            "INSERT INTO Books (ISBN, title, Author, description, genre, price, quantity) "
-            "VALUES (%(ISBN)s, %(title)s, %(Author)s, %(description)s, %(genre)s, %(price)s, %(quantity)s)",
+            "INSERT INTO Books (ISBN, title, Author, description, genre, price, quantity, summary) "
+            "VALUES (%(ISBN)s, %(title)s, %(Author)s, %(description)s, %(genre)s, %(price)s, %(quantity)s, %(summary)s)",
             data
         )
         conn.commit()
@@ -238,6 +240,8 @@ def get_customer_by_userid():
     user_id = request.args.get("userId")
     if not user_id:
         return jsonify({"message": "Missing userId"}),400
+    if "@" not in user_id or "." not in user_id.split("@")[-1]:
+        return jsonify({"message": "Invalid userId"}), 400
 
     conn = get_conn()
     cur = conn.cursor( dictionary = True) 
@@ -253,12 +257,17 @@ def get_customer_by_userid():
     return jsonify(row), 200
 
 
-@app.route("/customers/<int:cid>", methods=["GET"])
+@app.route("/customers/<cid>", methods=["GET"])
 def get_customer(cid):
     """
     GET /customers/<id>
-    Retrieve a customer by numeric ID. Returns 200 with data, 404 if not found.
+    Retrieve a customer by numeric ID. Returns 200 with data, 404 if not found, 400 if ID is not a number.
     """
+    try:
+        cid = int(cid)
+    except:
+        return jsonify({"message": "Invalid ID"}), 400
+
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     try:
