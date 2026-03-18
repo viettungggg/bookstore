@@ -1,0 +1,4 @@
+GEMINI_API_KEY
+.env
+venv/
+__pycache__/
